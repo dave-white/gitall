@@ -7,5 +7,5 @@ endif
 gitall: gitall.c
 	gcc -o gitall gitall.c
 
-install:
+install: gitall
 	cp gitall $(DESTDIR)/gitall
