@@ -44,7 +44,7 @@ static char **rd_gitignore()
     }
     printf("Ignoring: ");
     for (int i=0; i<ign_cnt; i++) {
-	printf("%s, ", ign_lst[i]);
+ 	printf("%s, ", ign_lst[i]);
     }
     printf("\n");
     /* if (ln) free(*ln); */
@@ -90,7 +90,7 @@ static int dglob(char *root)
 int main(int argc, char *argv[])
 {
     if (argc < 2) {
-	printf("No git operation given.\n");
+ 	printf("No git operation given.\n");
 	return 0;
     }
 
@@ -100,12 +100,13 @@ int main(int argc, char *argv[])
 
     printf("Running `git %s` on local repos.\n", argv[1]);
     char **ign_lst = rd_gitignore();
-    char *repo = malloc(1);
-    int len = 1;
+    char *repo = malloc(80*sizeof(char));
+    memset(repo, '\0', 80);
+    int len;
     for (int i=0; i<glob_rslt.gl_pathc; i++) {
-	memset(repo, '\0', len);
 	len = strlen(glob_rslt.gl_pathv[i]) - 5;
-	repo = realloc(repo, sizeof(char)*len);
+	repo = realloc(repo, sizeof(char)*(len+1));
+	memset(repo, '\0', (len+1));
 	strncpy(repo, glob_rslt.gl_pathv[i], len);
 	if (is_ignored(repo, ign_lst)) {
 	    continue;
