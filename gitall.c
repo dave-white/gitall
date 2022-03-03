@@ -30,7 +30,7 @@ static char **rd_gitignore()
 {
     FILE *ignf = fopen(GITIGNOREF, "r");
     if (ignf == NULL) return NULL;
-    char **ign_lst = malloc(12*sizeof(char **));
+    char **ign_lst = (char **)malloc(12*sizeof(char *));
     char *ign_ent;
     char *ln;
     size_t n;
@@ -39,7 +39,7 @@ static char **rd_gitignore()
     while ((len = getline(&ln, &n, ignf)) != -1) {
 	ign_cnt++;
 	ign_lst = realloc(ign_lst, sizeof(char **)*(ign_cnt));
-	ign_lst[ign_cnt - 1] = malloc((len+1)*sizeof(char));
+	ign_lst[ign_cnt - 1] = (char *)malloc((len+1)*sizeof(char));
 	memset(ign_lst[ign_cnt-1], 0, (len+1)*sizeof(char));
 	strncpy(ign_lst[ign_cnt - 1], ln, len - 1);
     }
