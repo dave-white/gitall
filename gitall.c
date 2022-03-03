@@ -12,7 +12,7 @@ static int run(char **cmd)
 
 static int run_git_act(char *repo, int gitargc, char *gitargv[])
 {
-    char **argv = (char **)malloc((4+gitargc)*sizeof(char *));
+    char **argv = (char **)calloc(4+gitargc, sizeof(char *));
     argv[0] = "git";
     argv[1] = "-C";
     argv[2] = repo;
@@ -23,6 +23,7 @@ static int run_git_act(char *repo, int gitargc, char *gitargv[])
     for (int i=0; i < 79 - (strlen(repo) + 6); i++) printf("=");
     printf("\n");
     run(argv);
+    free(argv);
     return 0;
 }
 
@@ -30,26 +31,27 @@ static char **rd_gitignore()
 {
     FILE *ignf = fopen(GITIGNOREF, "r");
     if (ignf == NULL) return NULL;
-    char **ign_lst = (char **)malloc(12*sizeof(char *));
-    char *ign_ent;
+    char **ign_lst = (char **)malloc(sizeof(char *));
     char *ln;
     size_t n;
     ssize_t len;
-    int ign_cnt = 0;
+    int i = 0;
     while ((len = getline(&ln, &n, ignf)) != -1) {
-	ign_cnt++;
-	ign_lst = realloc(ign_lst, sizeof(char **)*(ign_cnt));
-	ign_lst[ign_cnt - 1] = (char *)malloc((len+1)*sizeof(char));
-	memset(ign_lst[ign_cnt-1], 0, (len+1)*sizeof(char));
-	strncpy(ign_lst[ign_cnt - 1], ln, len - 1);
+	i++;
+	ign_lst = realloc(ign_lst, (i+1)*sizeof(char *));
+	char *ptr = (char *)calloc(80, sizeof(char));
+	ign_lst[i-1] = ptr;
+	/* memset(ign_lst[i-1], 0, 80*sizeof(char)); */
+	/* strcpy(ign_lst[i-1], "test"); */
+	/* ign_lst[i-1] = "test"; */
+	strncpy(ign_lst[i-1], ln, len-1);
     }
     printf("Ignoring: ");
-    for (int i=0; i<ign_cnt; i++) {
- 	printf("%s, ", ign_lst[i]);
+    for (int j=0; j<i; j++) {
+ 	printf("%s, ", ign_lst[j]);
     }
     printf("\n");
-    /* if (ln) free(*ln); */
-    ign_lst[ign_cnt] = NULL;
+    ign_lst[i] = NULL;
     fclose(ignf);
     return ign_lst;
 }
@@ -73,11 +75,12 @@ static int dglob(char *root)
     const int flg = FTS_NOSTAT|FTS_PHYSICAL|FTS_SEEDOT;
     FTS *tree = fts_open(root_lst, flg, NULL);
     FTSENT *fent;
+    char *pat = (char *)calloc(8, sizeof(char));
     while ((fent = fts_read(tree))) {
 	if (fent->fts_info == FTS_D) {
-	    char pat[fent->fts_pathlen+5+1];
-	    memset(pat, 0, (fent->fts_pathlen+5+1)*sizeof(char));
-	    strcpy(pat, fent->fts_path);
+	    pat = realloc(pat, fent->fts_pathlen*sizeof(char)+40);
+	    memset(pat, 0, fent->fts_pathlen*sizeof(char)+40);
+	    strncpy(pat, fent->fts_path, fent->fts_pathlen);
 	    strcat(pat, "/.git");
 	    glob(pat, glob_flg, NULL, &glob_rslt);
 	} else {
@@ -85,6 +88,7 @@ static int dglob(char *root)
 	}
     }
     fts_close(tree);
+    free(pat);
     return 0;
 }
 
@@ -98,12 +102,16 @@ int main(int argc, char *argv[])
     char *home = getenv("HOME");
     printf("Globbing for local git repos in %s.\n", home);
     dglob(home);
+    if (&glob_rslt == NULL || glob_rslt.gl_pathc == 0) {
+	printf("No repos globbed.\n");
+	return 0;
+    }
 
     printf("Running `git %s` on local repos.\n", argv[1]);
     char **ign_lst = rd_gitignore();
-    char *repo = (char *)malloc(80*sizeof(char));
-    memset(repo, 0, 80*sizeof(char));
-    int len = 1;
+    char *repo = (char *)calloc(80, sizeof(char));
+    /* memset(repo, 0, 80*sizeof(char)); */
+    int len = 0;
     for (int i=0; i<glob_rslt.gl_pathc; i++) {
 	memset(repo, 0, (len+1)*sizeof(char));
 	len = strlen(glob_rslt.gl_pathv[i]) - 5;
@@ -117,6 +125,6 @@ int main(int argc, char *argv[])
     }
     free(repo);
     free(ign_lst);
-    globfree(&glob_rslt);
+    /* globfree(&glob_rslt); */
     return 0;
 }
