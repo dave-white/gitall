@@ -10,7 +10,7 @@
 #include <fnmatch.h>
 #include <stdbool.h>
 
-#define GITIGNOREF "/Users/dgw/src/git-all/gitignore"
+#define GITIGNOREF "/home/dgw/src/gitall/gitignore"
 
 static glob_t glob_rslt;
 const int glob_flg = GLOB_APPEND;

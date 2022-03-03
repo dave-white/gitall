@@ -4,8 +4,8 @@ endif
 
 .PHONY: install
 
-gitall: gitall.c
-	gcc -o gitall gitall.c
+gitall.o: %.o: %.c %.h
+	gcc -o $@ $^
 
-install: gitall
-	cp gitall $(DESTDIR)/gitall
+install: gitall.o
+	cp gitall.o $(DESTDIR)/gitall

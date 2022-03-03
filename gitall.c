@@ -39,7 +39,8 @@ static char **rd_gitignore()
     while ((len = getline(&ln, &n, ignf)) != -1) {
 	ign_cnt++;
 	ign_lst = realloc(ign_lst, sizeof(char **)*ign_cnt);
-	ign_lst[ign_cnt - 1] = malloc(len*sizeof(char));
+	ign_lst[ign_cnt - 1] = malloc((len+1)*sizeof(char));
+	memset(ign_lst[ign_cnt-1], 0, len+1);
 	strncpy(ign_lst[ign_cnt - 1], ln, len - 1);
     }
     printf("Ignoring: ");
@@ -75,7 +76,7 @@ static int dglob(char *root)
     while ((fent = fts_read(tree))) {
 	if (fent->fts_info == FTS_D) {
 	    char glob_pat[fent->fts_pathlen + 5 + 1];
-	    memset(glob_pat, '\0', sizeof(glob_pat));
+	    memset(glob_pat, 0, fent->fts_pathlen + 5);
 	    strcpy(glob_pat, fent->fts_path);
 	    strcat(glob_pat, "/.git");
 	    glob(glob_pat, glob_flg, NULL, &glob_rslt);
@@ -100,13 +101,13 @@ int main(int argc, char *argv[])
 
     printf("Running `git %s` on local repos.\n", argv[1]);
     char **ign_lst = rd_gitignore();
-    char *repo = malloc(80*sizeof(char));
+    char *repo = (char *)malloc(80*sizeof(char));
     memset(repo, '\0', 80);
     int len;
     for (int i=0; i<glob_rslt.gl_pathc; i++) {
 	len = strlen(glob_rslt.gl_pathv[i]) - 5;
 	repo = realloc(repo, sizeof(char)*(len+1));
-	memset(repo, '\0', (len+1));
+	memset(repo, '\0', len+1);
 	strncpy(repo, glob_rslt.gl_pathv[i], len);
 	if (is_ignored(repo, ign_lst)) {
 	    continue;
