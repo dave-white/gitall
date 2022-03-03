@@ -12,7 +12,7 @@ static int run(char **cmd)
 
 static int run_git_act(char *repo, int gitargc, char *gitargv[])
 {
-    char *argv[4 + gitargc];
+    char **argv = (char **)malloc((4+gitargc)*sizeof(char *));
     argv[0] = "git";
     argv[1] = "-C";
     argv[2] = repo;
@@ -30,7 +30,7 @@ static char **rd_gitignore()
 {
     FILE *ignf = fopen(GITIGNOREF, "r");
     if (ignf == NULL) return NULL;
-    char **ign_lst = malloc(sizeof(char **));
+    char **ign_lst = malloc(12*sizeof(char **));
     char *ign_ent;
     char *ln;
     size_t n;
@@ -38,9 +38,9 @@ static char **rd_gitignore()
     int ign_cnt = 0;
     while ((len = getline(&ln, &n, ignf)) != -1) {
 	ign_cnt++;
-	ign_lst = realloc(ign_lst, sizeof(char **)*ign_cnt);
+	ign_lst = realloc(ign_lst, sizeof(char **)*(ign_cnt));
 	ign_lst[ign_cnt - 1] = malloc((len+1)*sizeof(char));
-	memset(ign_lst[ign_cnt-1], 0, len+1);
+	memset(ign_lst[ign_cnt-1], 0, (len+1)*sizeof(char));
 	strncpy(ign_lst[ign_cnt - 1], ln, len - 1);
     }
     printf("Ignoring: ");
@@ -75,11 +75,11 @@ static int dglob(char *root)
     FTSENT *fent;
     while ((fent = fts_read(tree))) {
 	if (fent->fts_info == FTS_D) {
-	    char glob_pat[fent->fts_pathlen + 5 + 1];
-	    memset(glob_pat, 0, fent->fts_pathlen + 5);
-	    strcpy(glob_pat, fent->fts_path);
-	    strcat(glob_pat, "/.git");
-	    glob(glob_pat, glob_flg, NULL, &glob_rslt);
+	    char pat[fent->fts_pathlen+5+1];
+	    memset(pat, 0, (fent->fts_pathlen+5+1)*sizeof(char));
+	    strcpy(pat, fent->fts_path);
+	    strcat(pat, "/.git");
+	    glob(pat, glob_flg, NULL, &glob_rslt);
 	} else {
 	    continue;
 	}
@@ -102,12 +102,12 @@ int main(int argc, char *argv[])
     printf("Running `git %s` on local repos.\n", argv[1]);
     char **ign_lst = rd_gitignore();
     char *repo = (char *)malloc(80*sizeof(char));
-    memset(repo, '\0', 80);
-    int len;
+    memset(repo, 0, 80*sizeof(char));
+    int len = 1;
     for (int i=0; i<glob_rslt.gl_pathc; i++) {
+	memset(repo, 0, (len+1)*sizeof(char));
 	len = strlen(glob_rslt.gl_pathv[i]) - 5;
 	repo = realloc(repo, sizeof(char)*(len+1));
-	memset(repo, '\0', len+1);
 	strncpy(repo, glob_rslt.gl_pathv[i], len);
 	if (is_ignored(repo, ign_lst)) {
 	    continue;
