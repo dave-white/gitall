@@ -9,8 +9,7 @@
 #include <fts.h>
 #include <fnmatch.h>
 #include <stdbool.h>
-
-#define GITIGNOREF "/home/dgw/src/gitall/gitignore"
+#include "config.h"
 
 static glob_t glob_rslt;
 const int glob_flg = GLOB_APPEND;
