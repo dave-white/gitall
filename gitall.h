@@ -10,13 +10,20 @@
 #include <fnmatch.h>
 #include "config.h"
 
+#define die(e) do { fprintf(stderr, "%s\n", e); exit(EXIT_FAILURE); } while (0);
+
 static glob_t glob_rslt;
 const int glob_flg = GLOB_APPEND;
 
-static int run(char **cmd);
+struct strary {
+    int strc;
+    char **strv;
+} strary;
 
-static int run_git_act(char *repo, int gitargc, char *gitargv[]);
+static char *run(char **argv);
 
-static char **rd_gitignore();
+static int run_git(char *repo, int gitargc, char *gitargv[]);
+
+static int rd_gitignore();
 
 static int dglob(char *root);
