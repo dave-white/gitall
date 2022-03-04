@@ -4,7 +4,7 @@ endif
 
 .PHONY: install
 
-gitall.o: %.o: %.c %.h
+gitall.o: %.o: %.c %.h config.h
 	gcc -o $@ $<
 
 install: gitall.o
