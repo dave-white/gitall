@@ -117,11 +117,16 @@ int main(int argc, char *argv[])
   printf("Running `git %s` on local repos.\n", argv[1]);
 
   struct strary igns;
-  rd_gitignore(&igns);
-  if (igns.strc > 0) {
-    printf("Ignoring: %s", igns.strv[0]);
-    for (int i=1; i<igns.strc; i++) printf(", %s", igns.strv[i]);
-    printf("\n");
+  if (strcmp(argv[1], "pull") == 0) {
+      igns.strc = 0;
+      igns.strv = NULL;
+  } else {
+      rd_gitignore(&igns);
+      if (igns.strc > 0) {
+	  printf("Ignoring: %s", igns.strv[0]);
+	  for (int i=1; i<igns.strc; i++) printf(", %s", igns.strv[i]);
+	  printf("\n");
+      }
   }
 
   char *repo = (char *)calloc(80, sizeof(char));
