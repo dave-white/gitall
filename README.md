@@ -20,17 +20,5 @@ otherwise, it will be installed at whatever path you supply in `<destdir>`.
 
 ## Usage
 `gitall <cmds>`\
-where `<cmds>` stands for whatever you would normally supply to `git` in a local repo, e.g `status --porcelain`.
-
-## Behavior
-For the moment the dynamic memory allocation in `gitall` is very 
-rudimentary:
-
--  Local git repos with exceedingly long file paths may cause problems.
-
--  If the output of the `git` command run in a particular repo is 
-   exceedingly longer than approx. 4K, then it will be cut off in writing 
-   to `stdout`.
-
-Additionally, I have no idea whether this program behaves as expected on a 
-system with something other than the GNU C Standard Library.
+where `<cmds>` stands for whatever you would normally supply to `git` in a 
+local repo, e.g `status --porcelain`.
