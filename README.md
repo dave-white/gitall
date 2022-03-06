@@ -22,3 +22,7 @@ otherwise, it will be installed at whatever path you supply in `<destdir>`.
 `gitall <cmds>`\
 where `<cmds>` stands for whatever you would normally supply to `git` in a 
 local repo, e.g `status --porcelain`.
+
+## Supported systems
+-  Linux with the GNU C Library (and probably a host of others)
+-  MacOS (at least on Monterey)

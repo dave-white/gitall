@@ -8,6 +8,14 @@
 #include <sys/stat.h>
 #include <fts.h>
 #include <fnmatch.h>
+
+#ifdef __MACH__
+#include <util.h>
+#endif
+#ifdef __linux__
+#include <pty.h>
+#endif
+
 #include "config.h"
 
 #define die(e) do { fprintf(stderr, "%s\n", e); exit(EXIT_FAILURE); } while (0);
@@ -100,10 +108,10 @@ main(int argc, char *argv[])
   int repo_szmult = 1;
   int len = 0;
   int skip;
-  FILE *output;
-  int tuyau[2]; // "tuyau" is, roughly, French for "pipe"
+  int master;
   pid_t pid;
-  for (int i=0; i<glob_rslt.gl_pathc; i++) {
+  FILE *output;
+  for (int i = 0; i < glob_rslt.gl_pathc; i++) {
     len = strlen(glob_rslt.gl_pathv[i]) - 5;
     if (len > 128*repo_szmult - 8) {
       repo_szmult++;
@@ -111,47 +119,40 @@ main(int argc, char *argv[])
     }
     memset(repo, 0, (len+1)*sizeof(char));
     strncpy(repo, glob_rslt.gl_pathv[i], len);
+
     skip = 0;
-    for (int j=0; j<igns.strc; j++) {
-      if (fnmatch(igns.strv[j], repo, 0) == 0) {
+    int j = 0;
+    while (!skip && (j < igns.strc)) {
+      if (fnmatch(igns.strv[j], repo, 0) == 0)
 	skip = 1;
-	break;
-      }
+      j++;
     }
-    if (skip)
-      continue;
 
-    gitargv[2] = repo;
+    if (!skip) {
+      gitargv[2] = repo;
 
-    if(pipe(tuyau))
-      die("tuyau failed.\n");
-
-    pid = fork();
-    if (pid < (pid_t) 0) {
-      die("Fork failed.\n");
-    } else if (pid == 0) {
-      // Child
-      close(tuyau[0]); // Close readable end.
-      dup2 (tuyau[1], STDOUT_FILENO);
-      dup2 (tuyau[1], STDERR_FILENO);
-      close(tuyau[1]);
-      execvp(gitargv[0], gitargv);
-      die("Spawned execvp going down.\n");
-    } else {
-      // Parent
-      close(tuyau[1]); // Close writable end.
-      output = fdopen(tuyau[0], "r");
-      int c;
-      if ((c = fgetc(output)) != EOF) {
-        printf("\n==== %s ", repo);
-        for (int i=0; i < 79 - (strlen(repo) + 6); i++) printf("=");
-        printf("\n");
-        putchar(c);
-        while ((c = fgetc(output)) != EOF)
-      putchar(c);
+      pid = forkpty(&master, NULL, NULL, NULL);
+      if (pid < (pid_t) 0) {
+	die("Fork failed.\n");
+      } else if (pid == 0) {
+	// Child
+	execvp(gitargv[0], gitargv);
+	die("Spawned execvp going down.\n");
+      } else {
+	// Parent
+	output = fdopen(master, "r");
+	int c;
+	if ((c = fgetc(output)) != EOF) {
+	  printf("\n==== %s ", repo);
+	  for (int i=0; i < 79 - (strlen(repo) + 6); i++) printf("=");
+	  printf("\n");
+	  putchar(c);
+	  while ((c = fgetc(output)) != EOF)
+	    putchar(c);
+	}
+	fclose(output);
+	wait(NULL);
       }
-      fclose(output);
-      wait(NULL);
     }
   }
 
