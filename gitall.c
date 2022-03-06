@@ -101,7 +101,7 @@ main(int argc, char *argv[])
   int len = 0;
   int skip;
   FILE *output;
-  int tuyau[2];
+  int tuyau[2]; // "tuyau" is, roughly, French for "pipe"
   pid_t pid;
   for (int i=0; i<glob_rslt.gl_pathc; i++) {
     len = strlen(glob_rslt.gl_pathv[i]) - 5;
@@ -133,7 +133,7 @@ main(int argc, char *argv[])
       // Child
       close(tuyau[0]); // Close readable end.
       dup2 (tuyau[1], STDOUT_FILENO);
-      // dup2 (tuyau[1], STDERR_FILENO);
+      dup2 (tuyau[1], STDERR_FILENO);
       close(tuyau[1]);
       execvp(gitargv[0], gitargv);
       die("Spawned execvp going down.\n");
