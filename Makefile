@@ -2,16 +2,26 @@ ifndef DESTDIR
 DESTDIR = ~/.local/bin
 endif
 
-.PHONY: install clean
+.PHONY: all install uninstall clean
 
-gitall.o: %.o: %.c config.h
-	gcc -o $@ $<
+SRC = gitall.c
+OBJ = $(SRC:.c=.o)
 
+all: gitall
+
+gitall: config.h $(OBJ)
+	gcc -o $@ $(OBJ)
+	
 config.h:
-	cp -n config.h.tmpl config.h
+	cp -n config.def.h config.h
 
-install: gitall.o
-	cp gitall.o $(DESTDIR)/gitall
+install: gitall
+	mkdir -p $(DESTDIR)
+	cp gitall $(DESTDIR)/
+	chmod 755 $(DESTDIR)/gitall
+
+uninstall:
+	rm -f $(DESTDIR)/gitall
 
 clean:
-	rm *.o
+	rm gitall $(OBJ)
